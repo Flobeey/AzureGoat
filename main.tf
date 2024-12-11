@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 0.13"
+  required_version = ">= 1.9.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -536,22 +536,24 @@ resource "azurerm_linux_function_app" "function_app_front" {
   service_plan_id            = azurerm_service_plan.app_service_plan.id
   storage_account_name       = azurerm_storage_account.storage_account.name
   storage_account_access_key = azurerm_storage_account.storage_account.primary_access_key
-  depends_on = [null_resource.file_replacement_upload]
+  depends_on                 = [null_resource.file_replacement_upload]
   app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE"    = "https://${azurerm_storage_account.storage_account.name}.blob.core.windows.net/${azurerm_storage_container.storage_container.name}/${azurerm_storage_blob.storage_blob_front.name}${data.azurerm_storage_account_blob_container_sas.storage_account_blob_container_sas.sas}",
     FUNCTIONS_WORKER_RUNTIME = "node",
     "AzureWebJobsDisableHomepage" = "true",
+    FUNCTIONS_EXTENSION_VERSION = "~3"
   }
 
   site_config {
     application_stack {
-      python_version = "3.9"
+      node_version = "12"
     }
     cors {
       allowed_origins = ["*"]
     }
   }
 }
+
 
 resource "null_resource" "file_replacement_vm_ip" {
   provisioner "local-exec" {
@@ -590,3 +592,4 @@ resource "azurerm_storage_blob" "config_update_vm" {
 output "Target_URL"{
   value = "https://${azurerm_linux_function_app.function_app_front.name}.azurewebsites.net"
 }
+    
